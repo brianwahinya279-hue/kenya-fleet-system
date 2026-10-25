@@ -10,6 +10,10 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname)));
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // 1. Mock Database of your Lorries & Drivers in Kenya
 let fleetDatabase = [
     { id: 1, regNo: 'KDA 892X', driverName: 'John Kamau', phone: '254712345678', baselineKmPerLitre: 2.5 },
