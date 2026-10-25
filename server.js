@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // Added to handle file paths
 const axios = require('axios'); // Added to send real network requests
 
 const app = express();
@@ -7,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static(path.join(__dirname)));
 
 // 1. Mock Database of your Lorries & Drivers in Kenya
 let fleetDatabase = [
