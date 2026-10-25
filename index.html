@@ -1,55 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kenya Fleet System</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenya Fleet & Fuel Management Dashboard</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background: #f3f7fb;
-        color: #1f2937;
-      }
-      .container {
-        max-width: 760px;
-        margin: 80px auto;
-        background: #ffffff;
-        padding: 32px;
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-      }
-      h1 {
-        margin-top: 0;
-        color: #0f172a;
-      }
-      .badge {
-        display: inline-block;
-        background: #dcfce7;
-        color: #166534;
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: bold;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-      p {
-        line-height: 1.7;
-      }
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #008000; text-align: center; }
+        .card { background: #fafafa; border: 1px solid #ddd; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+        select, input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #008000; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 15px; width: 100%; }
+        button:hover { background-color: #006600; }
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; }
+        .approved { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .variance { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .sms-box { background: #000; color: #0ff; font-family: monospace; padding: 15px; border-radius: 5px; margin-top: 15px; white-space: pre-wrap; display: none; }
     </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="badge">Live Fleet Monitoring</div>
-      <h1>Kenya Fleet System</h1>
-      <p>
-        This application is for checking fuel requests, validating allowances, and sending
-        driver alerts for fleet operations across Kenya.
-      </p>
-      <p>
-        The API is available at <strong>/api/fuel-check</strong> for fleet data validation.
-      </p>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚛 Kenya Fleet & Fuel Dispatch Portal</h1>
+    <p style="text-align: center; color: #666;">Simulate vehicle fueling, mileage tracking, and automated Safaricom SMS alerts.</p>
+
+    <div class="card">
+        <h3>Dispatch & Station Fuel Check</h3>
+        
+        <label>Select Lorry (Registration & Driver):</label>
+        <select id="regNo">
+            <option value="KDA 892X">KDA 892X - John Kamau (Baseline: 2.5 km/L)</option>
+            <option value="KCF 432L">KCF 432L - David Omondi (Baseline: 2.2 km/L)</option>
+            <option value="KDD 105H">KDD 105H - Hassan Juma (Baseline: 2.8 km/L)</option>
+        </select>
+
+        <label>Route Distance (km):</label>
+        <input type="number" id="distanceKm" value="480" placeholder="e.g., 480 (Nairobi to Mombasa)">
+
+        <label>Fuel Station Name:</label>
+        <input type="text" id="stationName" value="Shell Highway Naivasha">
+
+        <label>Requested Fuel (Litres):</label>
+        <input type="number" id="requestedLitres" value="190" placeholder="Enter litres pumped at station">
+
+        <button onclick="checkFuel()">Process Station Refuel & Notify</button>
     </div>
-  </body>
+
+    <div id="resultBox" class="result-box">
+        <h3 id="resultTitle"></h3>
+        <p id="resultDesc"></p>
+    </div>
+
+    <div id="smsBox" class="sms-box">
+        <strong>📱 Simulated Safaricom SMS Sent to Manager Phone (+254 7XX...):</strong>
+        <div id="smsContent"></div>
+    </div>
+</div>
+
+<script>
+    async function checkFuel() {
+        const regNo = document.getElementById('regNo').value;
+        const distanceKm = parseFloat(document.getElementById('distanceKm').value);
+        const stationName = document.getElementById('stationName').value;
+        const requestedLitres = parseFloat(document.getElementById('requestedLitres').value);
+
+        const response = await fetch('/api/fuel-check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ regNo, distanceKm, requestedLitres, stationName })
+        });
+
+        const data = await response.json();
+
+        const resultBox = document.getElementById('resultBox');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDesc = document.getElementById('resultDesc');
+        const smsBox = document.getElementById('smsBox');
+        const smsContent = document.getElementById('smsContent');
+
+        resultBox.style.display = 'block';
+        smsBox.style.display = 'block';
+
+        if (data.status === 'APPROVED') {
+            resultBox.className = 'result-box approved';
+            resultTitle.innerText = "✅ FUEL APPROVED";
+        } else {
+            resultBox.className = 'result-box variance';
+            resultTitle.innerText = "⚠️ VARIANCE ALERT: EXCESS FUEL FLAGGED";
+        }
+
+        resultDesc.innerHTML = `<strong>Message:</strong> ${data.message}<br><strong>Calculated Allowed Limit (+10% Buffer):</strong> ${data.allowedLimit} Litres`;
+
+        smsContent.innerText = `FLEET [${data.status}]\nLorry: ${data.lorry.regNo} | Driver: ${data.lorry.driverName}\nStation: ${stationName}\nPumped: ${requestedLitres}L (Allowed: ${data.allowedLimit}L)`;
+    }
+</script>
+
+</body>
 </html>
